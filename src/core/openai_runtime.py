@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from core.config import (
+    PROVIDER_OPENROUTER,
     get_red_model,
     get_red_provider,
     get_blue_model,
@@ -19,6 +20,17 @@ from core.config import (
     blue_client_kwargs,
     red_openai_client_kwargs,
 )
+
+_BLUE_LAB_MODEL = "liquid/lfm-2.5-2.6b"
+_OPENROUTER_MODEL_ALIASES = {
+    _BLUE_LAB_MODEL: f"{_BLUE_LAB_MODEL}:free",
+}
+
+
+def _request_model(model: str, provider: str) -> str:
+    if provider == PROVIDER_OPENROUTER:
+        return _OPENROUTER_MODEL_ALIASES.get(model, model)
+    return model
 
 
 @dataclass
@@ -63,7 +75,7 @@ class OpenAIRunner:
 
         client = self._client()
         completion = client.chat.completions.create(
-            model=self.model,
+            model=_request_model(self.model, self.provider),
             messages=[
                 {"role": "system", "content": agent.instruction},
                 {"role": "user", "content": user_message},
@@ -192,11 +204,12 @@ def create_blue_pair(
     temperature: float = 0.4,
 ) -> tuple[OpenAIAgent, OpenAIRunner]:
     """Blue Team — always OpenRouter liquid/lfm-2.5-2.6b."""
+    lab_model = get_blue_model().removesuffix(":free")
     return _make_pair(
         name=name,
         instruction=instruction,
         app_name=app_name,
-        model=get_blue_model(),
+        model=lab_model,
         provider=get_blue_provider(),
         client_kwargs=blue_client_kwargs(),
         plugins=plugins,

@@ -1,0 +1,23 @@
+{
+  "total_requests": 15,
+  "blocked_requests": 10,
+  "block_rate": 0.6666666666666666,
+  "rate_limit_hits": 10,
+  "judge_checks": 0,
+  "judge_fails": 0,
+  "judge_fail_rate": 0.0,
+  "alerts": [
+    {
+      "metric": "block_rate",
+      "value": 0.6666666666666666,
+      "threshold": 0.5,
+      "message": "Blocked request rate exceeded the configured threshold."
+    },
+    {
+      "metric": "rate_limit_hits",
+      "value": 10.0,
+      "threshold": 5.0,
+      "message": "Rate limit hit count reached the configured threshold."
+    }
+  ]
+}

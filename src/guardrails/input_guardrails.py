@@ -75,7 +75,7 @@ def detect_injection(user_input: str) -> InputStatus:
         r"\b(?:translate|encode|summari[sz]e)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions?)\b",
         r"\b(?:bo qua|quen)\s+(?:tat ca\s+|moi\s+)?huong dan\b",
         r"\b(?:tiet lo|cho xem)\s+(?:mat khau|api key|system prompt|huong dan)\b",
-    ]
+    )
 
     for pattern in injection_patterns:
         if re.search(pattern, normalized):

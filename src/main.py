@@ -24,7 +24,7 @@ _SRC_DIR = Path(__file__).resolve().parent
 if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
-from core.config import setup_api_key
+from core.config import get_openrouter_api_key, setup_api_key
 
 
 async def part2_guardrails():
@@ -63,22 +63,15 @@ async def part3_assignment_suite():
         run_assignment_suite,
     )
 
-    try:
-        plugins = build_production_plugins(use_llm_judge=False)
-        audit, monitor = build_observability()
-        pipeline = {"plugins": plugins, "audit": audit, "monitor": monitor}
-        result = await run_assignment_suite(pipeline)
-        print("Suite finished.")
-        print("Wrote outputs under repo outputs/")
-        return result
-    except NotImplementedError as e:
-        print(
-            "Chưa xong Checkpoint 3 (src/assignment/pipeline.py). "
-            "Hoàn thành rồi chạy lại từ gốc repo:\n"
-            "  python src/main.py --part 3"
-        )
-        print(f"Detail: {e}")
-        return None
+    plugins = build_production_plugins(use_llm_judge=False)
+    audit, monitor = build_observability()
+    pipeline = {"plugins": plugins, "audit": audit, "monitor": monitor}
+    result = await run_assignment_suite(pipeline)
+    print(
+        "Suite finished. Wrote outputs/results.json, outputs/audit_log.json, "
+        "and outputs/metrics.json under the repository root."
+    )
+    return result
 
 
 async def part4_attacks():
@@ -105,11 +98,12 @@ async def part4_attacks():
         red_advance, red_advance_runner, target_name="red_advance"
     )
 
-    save_attack_results(
+    artifact_path = save_attack_results(
         unsafe_results=unsafe_results,
         guards_results=guards_results,
         ai_attacks=None,
     )
+    print(f"Combined Red + Red Advance results saved to {artifact_path}")
 
     red_leaks = sum(1 for r in unsafe_results if r.get("leaked"))
     bonus_leaks = sum(1 for r in guards_results if r.get("leaked"))
@@ -134,10 +128,15 @@ async def part4_attacks():
 
 
 async def main(parts=None):
-    setup_api_key()
-
     if parts is None:
         parts = [2, 3, 4]  # Core: CP2 → CP3 → CP4
+    if 4 in parts:
+        setup_api_key()
+    elif 3 in parts and not get_openrouter_api_key():
+        raise RuntimeError(
+            "Checkpoint 3 requires OPENROUTER_API_KEY for Blue "
+            "(liquid/lfm-2.5-2.6b). Set it in .env."
+        )
 
     for part in parts:
         if part == 2:
